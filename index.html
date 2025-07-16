@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ファンクラブ ポストカード配布管理システム</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .mode-selector {
+            display: flex;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #ddd;
+        }
+        
+        .mode-btn {
+            flex: 1;
+            padding: 12px;
+            background: #f8f9fa;
+            color: #666;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .mode-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .mode-btn:hover:not(.active) {
+            background: #e9ecef;
+        }
+        
+        .test-mode-indicator {
+            background: #ff6b6b;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: none;
+        }
+        
+        .sync-status {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            color: #2e7d32;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .sync-status.disconnected {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #c62828;
+        }
+        
+        .staff-info {
+            background: #f0f7ff;
+            border: 1px solid #2196f3;
+            color: #1565c0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .tab {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .date-settings {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .date-group {
+            margin-bottom: 15px;
+        }
+        
+        .date-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .date-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        
+        .current-event {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .current-event h3 {
+            margin: 0 0 10px 0;
+            color: #2e7d32;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        input[type="text"], input[type="date"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        
+        input[type="text"]:focus, input[type="date"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .input-mode-switch {
+            display: flex;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #ddd;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 20px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #c62828;
+            display: none;
+        }
+        
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2e7d32;
+            display: none;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+            display: none;
+        }
+        
+        .stats {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .stats-label {
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .stats-value {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .qr-status {
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 14px;
+            color: #666;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        #qrReader {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #000;
+            position: relative;
+        }
+        
+        #qrReader video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .barcode-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 100px;
+            border: 2px solid #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.3);
+        }
+        
+        .barcode-overlay::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #ff0000;
+            animation: scan 2s ease-in-out infinite;
+        }
+        
+        @keyframes scan {
+            0%, 100% { top: 10%; }
+            50% { top: 90%; }
+        }
+        
+        .history {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            background: #fafafa;
+        }
+        
+        .history-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        .member-id {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .timestamp {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .clear-btn {
+            background: #dc3545;
+            font-size: 14px;
+            padding: 12px 20px;
+        }
+        
+        .clear-btn:hover {
+            background: #c82333;
+        }
+        
+        .export-btn {
+            background: #28a745;
+            font-size: 14px;
+            padding: 12px 20px;
+        }
+        
+        .export-btn:hover {
+            background: #218838;
+        }
+        
+        .active-staff {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .staff-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .staff-badge {
+            background: #667eea;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .staff-badge.offline {
+            background: #ccc;
+        }
+        
+        .sync-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .sync-btn {
+            flex: 1;
+            padding: 10px;
+            font-size: 14px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .sync-btn.refresh {
+            background: #28a745;
+            color: white;
+        }
+        
+        .sync-btn.status {
+            background: #6c757d;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎫 ポストカード配布管理</h1>
+        
+        <!-- リアルタイム同期ステータス -->
+        <div class="sync-status" id="syncStatus">
+            🔄 リアルタイム同期: 接続中
+        </div>
+        
+        <!-- スタッフ情報 -->
+        <div class="staff-info">
+            <strong>スタッフ: <span id="staffName">スタッフ001</span></strong>
+            <div>最終活動: <span id="lastActivity">--:--</span></div>
+        </div>
+        
+        <!-- タブメニュー -->
+        <div class="tabs">
+            <button class="tab active">配布管理</button>
+            <button class="tab">配布履歴</button>
+            <button class="tab">同期管理</button>
+            <button class="tab">設定</button>
+        </div>
+        
+        <!-- 配布管理タブ -->
+        <div class="tab-content active" id="distribution">
+            <!-- 入力モード切替（手動入力・バーコード読み取り） -->
+            <div class="input-mode-switch">
+                <button type="button" class="mode-btn active" id="manualBtn">手動入力</button>
+                <button type="button" class="mode-btn" id="barcodeBtn">バーコード読み取り</button>
+            </div>
+            
+            <div class="error" id="errorMessage"></div>
+            <div class="success" id="successMessage"></div>
+            <div class="warning" id="warningMessage"></div>
+            
+            <form id="memberForm">
+                <div class="form-group" id="manualInput">
+                    <label for="memberId">会員番号</label>
+                    <input type="text" id="memberId" name="memberId" placeholder="会員番号を入力してください" required>
+                </div>
+                
+                <div class="form-group" id="barcodeInput" style="display: none;">
+                    <label>バーコード読み取り</label>
+                    <div id="barcodeReader" style="width: 100%; max-width: 400px; margin: 0 auto; position: relative;">
+                        <div class="barcode-overlay" id="barcodeOverlay" style="display: none;"></div>
+                    </div>
+                    <div id="barcodeStatus" class="qr-status">バーコードスキャンを開始してください</div>
+                    <button type="button" class="btn" id="startBarcodeBtn">バーコードスキャン開始</button>
+                    <button type="button" class="btn" id="stopBarcodeBtn" style="display: none;">バーコードスキャン停止</button>
+                </div>
+                
+                <button type="submit" class="btn">ポストカード配布</button>
+            </form>
+            
+            <!-- 現在のイベント情報 -->
+            <div class="current-event" id="currentEvent">
+                <h3>📅 現在のイベント</h3>
+                <div id="eventInfo">設定タブでイベント情報を設定してください</div>
+            </div>
+            
+            <div class="stats">
+                <div class="stats-row">
+                    <span class="stats-label">本日の配布済み枚数：</span>
+                    <span class="stats-value" id="todayCount">0</span>
+                </div>
+                <div class="stats-row">
+                    <span class="stats-label">総配布済み枚数：</span>
+                    <span class="stats-value" id="totalCount">0</span>
+                </div>
+                <div class="stats-row">
+                    <span class="stats-label">全スタッフ総計：</span>
+                    <span class="stats-value" id="globalTotalCount">0</span>
+                </div>
+                <div class="stats-row">
+                    <span class="stats-label">最後の配布時刻：</span>
+                    <span class="stats-value" id="lastTime">未配布</span>
+                </div>
+            </div>
+            
+            <!-- モード選択（本番モード・テストモード） -->
+            <div class="mode-selector">
+                <button class="mode-btn active" id="productionBtn">本番モード</button>
+                <button class="mode-btn" id="testBtn">テストモード</button>
+            </div>
+            
+            <!-- テストモード表示 -->
+            <div class="test-mode-indicator" id="testModeIndicator">
+                🧪 テストモード - このモードでは実際のデータに影響しません
+            </div>
+        </div>
+        
+        <!-- 配布履歴タブ -->
+        <div class="tab-content" id="history">
+            <div class="form-group">
+                <label>配布履歴</label>
+                <div class="history" id="historyContainer">
+                    <div style="text-align: center; color: #666; font-style: italic;">
+                        まだ配布履歴がありません
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button type="button" class="btn clear-btn" onclick="clearHistory()" style="width: auto; flex: 1;">履歴をクリア</button>
+                    <button type="button" class="btn export-btn" onclick="exportCSV()" style="width: auto; flex: 1;">CSV出力</button>
+                    <button type="button" class="btn export-btn" onclick="exportText()" style="width: auto; flex: 1;">テキスト出力</button>
+                </div>
+            </div>
+            
+            <div class="export-section">
+                <div class="export-title">📊 データ出力</div>
+                <div class="export-options">
+                    <button type="button" class="btn export-btn" onclick="exportDetailedCSV()">詳細CSV出力</button>
+                    <button type="button" class="btn export-btn" onclick="exportMemberListOnly()">会員番号のみ出力</button>
+                    <button type="button" class="btn export-btn" onclick="copyToClipboard()">クリップボードにコピー</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 同期管理タブ -->
+        <div class="tab-content" id="sync">
+            <div class="active-staff">
+                <h3>👥 アクティブスタッフ</h3>
+                <div class="staff-list" id="staffList">
+                    <div class="staff-badge">スタッフ001 (自分)</div>
+                    <div class="staff-badge offline">スタッフ002</div>
+                    <div class="staff-badge offline">スタッフ003</div>
+                </div>
+            </div>
+            
+            <div class="sync-controls">
+                <button class="sync-btn refresh" onclick="forceSyncData()">データ同期</button>
+                <button class="sync-btn status" onclick="checkSyncStatus()">接続確認</button>
+            </div>
+            
+            <div class="stats">
+                <div class="stats-row">
+                    <span class="stats-label">同期済みレコード数：</span>
+                    <span class="stats-value" id="syncedRecords">0</span>
+                </div>
+                <div class="stats-row">
+                    <span class="stats-label">最終同期時刻：</span>
+                    <span class="stats-value" id="lastSyncTime">未同期</span>
+                </div>
+                <div class="stats-row">
+                    <span class="stats-label">同期待ちデータ：</span>
+                    <span class="stats-value" id="pendingSync">0</span>
+                </div>
+            </div>
+            
+            <div class="date-settings">
+                <h3>🔧 同期設定</h3>
+                
+                <div class="date-group">
+                    <label for="staffName">スタッフ名</label>
+                    <input type="text" id="staffNameInput" placeholder="例：田中太郎">
+                </div>
+                
+                <div class="date-group">
+                    <label for="syncInterval">同期間隔（秒）</label>
+                    <input type="number" id="syncInterval" value="10" min="5" max="60">
+                </div>
+                
+                <div class="date-group">
+                    <label>
+                        <input type="checkbox" id="autoSync" checked> 
+                        自動同期を有効にする
+                    </label>
+                </div>
+                
+                <button type="button" class="btn" onclick="saveSyncSettings()">同期設定を保存</button>
+            </div>
+        </div>
+        
+        <!-- 設定タブ -->
+        <div class="tab-content" id="settings">
+            <div class="date-settings">
+                <h3>📅 イベント設定</h3>
+                
+                <div class="date-group">
+                    <label for="eventName">イベント名</label>
+                    <input type="text" id="eventName" placeholder="例：2025年春ライブ">
+                </div>
+                
+                <div class="date-group">
+                    <label for="eventDate">イベント日付</label>
+                    <input type="date" id="eventDate">
+                </div>
+                
+                <div class="date-group">
+                    <label for="eventVenue">会場名</label>
+                    <input type="text" id="eventVenue" placeholder="例：東京ドーム">
+                </div>
+                
+                <button type="button" class="btn" onclick="saveEventSettings()">設定を保存</button>
+            </div>
+            
+            <div class="date-settings">
+                <h3>⚙️ システム設定</h3>
+                
+                <div class="date-group">
+                    <label>
+                        <input type="checkbox" id="strictDateCheck"> 
+                        厳密な日付チェック（イベント日以外は配布を制限）
+                    </label>
+                </div>
+                
+                <div class="date-group">
+                    <label>
+                        <input type="checkbox" id="allowDuplicateInTest"> 
+                        テストモードで重複を許可
+                    </label>
+                </div>
+                
+                <div class="date-group">
+                    <label>
+                        <input type="checkbox" id="soundNotification" checked> 
+                        音声通知を有効にする
+                    </label>
+                </div>
+                
+                <button type="button" class="btn" onclick="saveSystemSettings()">設定を保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <script>
+        // グローバル変数
+        let distributedMembers = [];
+        let testDistributedMembers = [];
+        let globalDistributedMembers = []; // 全スタッフの配布記録
+        let html5QrCode = null;
+        let isBarcodeMode = false;
+        let isTestMode = false;
+        let staffId = 'staff001';
+        let staffName = 'スタッフ001';
+        let syncInterval = 10000; // 10秒
+        let autoSyncEnabled = true;
+        let syncTimer = null;
+        let isConnected = false;
+        let lastScanTime = 0; // バーコード読み取りの連続実行防止
+        
+        let eventSettings = {
+            name: '',
+            date: '',
+            venue: ''
+        };
+        let systemSettings = {
+            strictDateCheck: false,
+            allowDuplicateInTest: false,
+            soundNotification: true
+        };
+        
+        // DOM要素
+        const form = document.getElementById('memberForm');
+        const memberIdInput = document.getElementById('memberId');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const warningMessage = document.getElementById('warningMessage');
+        const todayCount = document.getElementById('todayCount');
+        const totalCount = document.getElementById('totalCount');
+        const globalTotalCount = document.getElementById('globalTotalCount');
+        const lastTime = document.getElementById('lastTime');
+        const manualInput = document.getElementById('manualInput');
+        const barcodeInput = document.getElementById('barcodeInput');
+        const barcodeStatus = document.getElementById('barcodeStatus');
+        const startBarcodeBtn = document.getElementById('startBarcodeBtn');
+        const stopBarcodeBtn = document.getElementById('stopBarcodeBtn');
+        const manualBtn = document.getElementById('manualBtn');
+        const barcodeBtn = document.getElementById('barcodeBtn');
+        const testModeIndicator = document.getElementById('testModeIndicator');
+        const productionBtn = document.getElementById('productionBtn');
+        const testBtn = document.getElementById('testBtn');
+        const currentEvent = document.getElementById('currentEvent');
+        const eventInfo = document.getElementById('eventInfo');
+        const syncStatus = document.getElementById('syncStatus');
+        const staffNameDisplay = document.getElementById('staffName');
+        const lastActivity = document.getElementById('lastActivity');
+        
+        // 初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+            updateEventDisplay();
+            updateStats();
+            updateStaffInfo();
+            memberIdInput.focus();
+            initializeSync();
+            setupEventListeners();
+        });
+        
+        // イベントリスナーをセットアップ
+        function setupEventListeners() {
+            // タブクリックイベント
+            document.querySelectorAll('.tab').forEach((tab, index) => {
+                tab.addEventListener('click', function() {
+                    const tabNames = ['distribution', 'history', 'sync', 'settings'];
+                    showTab(tabNames[index]);
+                });
+            });
+            
+            // 本番/テストモード切り替え
+            const productionBtn = document.getElementById('productionBtn');
+            const testBtn = document.getElementById('testBtn');
+            if (productionBtn) productionBtn.addEventListener('click', switchToProduction);
+            if (testBtn) testBtn.addEventListener('click', switchToTest);
+            
+            // 手動/バーコードモード切り替え
+            const manualBtn = document.getElementById('manualBtn');
+            const barcodeBtn = document.getElementById('barcodeBtn');
+            if (manualBtn) manualBtn.addEventListener('click', switchToManual);
+            if (barcodeBtn) barcodeBtn.addEventListener('click', switchToBarcode);
+            
+            // バーコードスキャンボタン
+            const startBarcodeBtn = document.getElementById('startBarcodeBtn');
+            const stopBarcodeBtn = document.getElementById('stopBarcodeBtn');
+            if (startBarcodeBtn) startBarcodeBtn.addEventListener('click', startBarcodeScanner);
+            if (stopBarcodeBtn) stopBarcodeBtn.addEventListener('click', stopBarcodeScanner);
+            
+            // 設定保存ボタン（後で追加）
+            setupSettingsButtons();
+        }
+        
+        // 設定ボタンのイベントリスナー
+        function setupSettingsButtons() {
+            // 少し遅れて設定ボタンを検索（DOM構築完了後）
+            setTimeout(() => {
+                const saveEventBtn = document.querySelector('button[onclick="saveEventSettings()"]');
+                const saveSystemBtn = document.querySelector('button[onclick="saveSystemSettings()"]');
+                const saveSyncBtn = document.querySelector('button[onclick="saveSyncSettings()"]');
+                const clearBtn = document.querySelector('button[onclick="clearHistory()"]');
+                const exportCSVBtn = document.querySelector('button[onclick="exportCSV()"]');
+                const exportTextBtn = document.querySelector('button[onclick="exportText()"]');
+                
+                if (saveEventBtn) {
+                    saveEventBtn.removeAttribute('onclick');
+                    saveEventBtn.addEventListener('click', saveEventSettings);
+                }
+                if (saveSystemBtn) {
+                    saveSystemBtn.removeAttribute('onclick');
+                    saveSystemBtn.addEventListener('click', saveSystemSettings);
+                }
+                if (saveSyncBtn) {
+                    saveSyncBtn.removeAttribute('onclick');
+                    saveSyncBtn.addEventListener('click', saveSyncSettings);
+                }
+                if (clearBtn) {
+                    clearBtn.removeAttribute('onclick');
+                    clearBtn.addEventListener('click', clearHistory);
+                }
+                if (exportCSVBtn) {
+                    exportCSVBtn.removeAttribute('onclick');
+                    exportCSVBtn.addEventListener('click', exportCSV);
+                }
+                if (exportTextBtn) {
+                    exportTextBtn.removeAttribute('onclick');
+                    exportTextBtn.addEventListener('click', exportText);
+                }
+            }, 100);
+        }
+        
+        // 設定読み込み
+        function loadSettings() {
+            const savedEventSettings = localStorage.getItem('eventSettings');
+            const savedSystemSettings = localStorage.getItem('systemSettings');
+            const savedDistributedMembers = localStorage.getItem('distributedMembers');
+            const savedTestDistributedMembers = localStorage.getItem('testDistributedMembers');
+            const savedStaffInfo = localStorage.getItem('staffInfo');
+            
+            if (savedEventSettings) {
+                eventSettings = JSON.parse(savedEventSettings);
+                document.getElementById('eventName').value = eventSettings.name || '';
+                document.getElementById('eventDate').value = eventSettings.date || '';
+                document.getElementById('eventVenue').value = eventSettings.venue || '';
+            }
+            
+            if (savedSystemSettings) {
+                systemSettings = JSON.parse(savedSystemSettings);
+                document.getElementById('strictDateCheck').checked = systemSettings.strictDateCheck || false;
+                document.getElementById('allowDuplicateInTest').checked = systemSettings.allowDuplicateInTest || false;
+                document.getElementById('soundNotification').checked = systemSettings.soundNotification !== false;
+            }
+            
+            if (savedDistributedMembers) {
+                distributedMembers = JSON.parse(savedDistributedMembers);
+            }
+            
+            if (savedTestDistributedMembers) {
+                testDistributedMembers = JSON.parse(savedTestDistributedMembers);
+            }
+            
+            if (savedStaffInfo) {
+                const staffInfo = JSON.parse(savedStaffInfo);
+                staffId = staffInfo.id || 'staff001';
+                staffName = staffInfo.name || 'スタッフ001';
+                document.getElementById('staffNameInput').value = staffName;
+            }
+        }
+        
+        // 同期初期化
+        function initializeSync() {
+            // シミュレートされた接続状態
+            isConnected = Math.random() > 0.3; // 70%の確率で接続
+            updateSyncStatus();
+            
+            if (autoSyncEnabled) {
+                startAutoSync();
+            }
+            
+            // グローバルデータの模擬データ生成
+            generateMockGlobalData();
+        }
+        
+        // 模擬的なグローバルデータ生成
+        function generateMockGlobalData() {
+            const mockData = [];
+            const today = getTodayString();
+            const staffs = ['staff001', 'staff002', 'staff003'];
+            
+            for (let i = 0; i < 50; i++) {
+                const staff = staffs[Math.floor(Math.random() * staffs.length)];
+                const time = new Date();
+                time.setHours(Math.floor(Math.random() * 8) + 10, Math.floor(Math.random() * 60));
+                
+                mockData.push({
+                    id: `M${String(1000 + i).padStart(6, '0')}`,
+                    timestamp: time.toLocaleString('ja-JP'),
+                    date: today,
+                    staffId: staff,
+                    testMode: false
+                });
+            }
+            
+            globalDistributedMembers = mockData;
+            localStorage.setItem('globalDistributedMembers', JSON.stringify(globalDistributedMembers));
+        }
+        
+        // 自動同期開始
+        function startAutoSync() {
+            if (syncTimer) {
+                clearInterval(syncTimer);
+            }
+            
+            syncTimer = setInterval(() => {
+                if (autoSyncEnabled) {
+                    syncDataWithServer();
+                }
+            }, syncInterval);
+        }
+        
+        // サーバーとのデータ同期（模擬）
+        function syncDataWithServer() {
+            if (!isConnected) {
+                updateSyncStatus();
+                return;
+            }
+            
+            // 実際の実装では、ここでサーバーAPIを呼び出し
+            // 今回は模擬的な処理
+            const currentTime = getCurrentTime();
+            document.getElementById('lastSyncTime').textContent = currentTime;
+            document.getElementById('syncedRecords').textContent = distributedMembers.length;
+            document.getElementById('pendingSync').textContent = '0';
+            
+            updateStats();
+        }
+        
+        // 同期ステータス更新
+        function updateSyncStatus() {
+            if (isConnected) {
+                syncStatus.textContent = '🔄 リアルタイム同期: 接続中';
+                syncStatus.className = 'sync-status';
+            } else {
+                syncStatus.textContent = '⚠️ リアルタイム同期: 接続失敗';
+                syncStatus.className = 'sync-status disconnected';
+            }
+        }
+        
+        // スタッフ情報更新
+        function updateStaffInfo() {
+            staffNameDisplay.textContent = staffName;
+            lastActivity.textContent = getCurrentTime();
+        }
+        
+        // タブ切り替え
+        function showTab(tabName) {
+            // すべてのタブからactiveクラスを削除
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            
+            // クリックされたタブにactiveクラスを追加
+            const clickedTab = document.querySelector(`[onclick="showTab('${tabName}')"]`);
+            if (clickedTab) {
+                clickedTab.classList.add('active');
+            }
+            
+            // すべてのタブコンテンツを非表示
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 指定されたタブコンテンツを表示
+            const targetContent = document.getElementById(tabName);
+            if (targetContent) {
+                targetContent.classList.add('active');
+            }
+            
+            // タブ切り替え時に履歴を更新（履歴タブの場合）
+            if (tabName === 'history') {
+                updateHistory();
+            }
+        }
+        
+        // 本番モード/テストモード切り替え
+        function switchToProduction() {
+            isTestMode = false;
+            productionBtn.classList.add('active');
+            testBtn.classList.remove('active');
+            testModeIndicator.style.display = 'none';
+            updateStats();
+        }
+        
+        function switchToTest() {
+            isTestMode = true;
+            productionBtn.classList.remove('active');
+            testBtn.classList.add('active');
+            testModeIndicator.style.display = 'block';
+            updateStats();
+        }
+        
+        // 手動入力モードに切り替え
+        function switchToManual() {
+            isQRMode = false;
+            manualInput.style.display = 'block';
+            qrInput.style.display = 'none';
+            manualBtn.classList.add('active');
+            qrBtn.classList.remove('active');
+            
+            if (html5QrCode && html5QrCode.isScanning) {
+                stopQRScanner();
+            }
+            
+            memberIdInput.focus();
+            hideMessages();
+        }
+        
+        // QRコードモードに切り替え
+        function switchToQR() {
+            isQRMode = true;
+            manualInput.style.display = 'none';
+            qrInput.style.display = 'block';
+            manualBtn.classList.remove('active');
+            qrBtn.classList.add('active');
+            
+            hideMessages();
+        }
+        
+        // バーコードスキャナー開始（QRコード＋バーコード対応）
+        function startBarcodeScanner() {
+            if (html5QrCode && html5QrCode.isScanning) {
+                stopBarcodeScanner();
+                return;
+            }
+            
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("barcodeReader");
+            }
+            
+            barcodeStatus.textContent = "カメラを起動中...";
+            startBarcodeBtn.style.display = 'none';
+            stopBarcodeBtn.style.display = 'block';
+            document.getElementById('barcodeOverlay').style.display = 'block';
+            
+            // バーコード＋QRコード対応の設定
+            const scanConfig = {
+                fps: 10,
+                qrbox: { width: 300, height: 100 },
+                aspectRatio: 3.0, // バーコード用の横長比率
+                disableFlip: false,
+                supportedScanTypes: [
+                    Html5QrcodeScanType.SCAN_TYPE_CAMERA,
+                ],
+                formatsToSupport: [
+                    Html5QrcodeSupportedFormats.QR_CODE,
+                    Html5QrcodeSupportedFormats.CODE_128,
+                    Html5QrcodeSupportedFormats.CODE_39,
+                    Html5QrcodeSupportedFormats.CODE_93,
+                    Html5QrcodeSupportedFormats.CODABAR,
+                    Html5QrcodeSupportedFormats.EAN_13,
+                    Html5QrcodeSupportedFormats.EAN_8,
+                    Html5QrcodeSupportedFormats.UPC_A,
+                    Html5QrcodeSupportedFormats.UPC_E
+                ]
+            };
+            
+            html5QrCode.start(
+                { facingMode: "environment" },
+                scanConfig,
+                (decodedText, decodedResult) => {
+                    // 連続読み取り防止（1秒以内の重複を防ぐ）
+                    const currentTime = Date.now();
+                    if (currentTime - lastScanTime < 1000) {
+                        return;
+                    }
+                    lastScanTime = currentTime;
+                    
+                    // 読み取り形式を判定
+                    const format = decodedResult.result.format;
+                    let formatName = "バーコード";
+                    if (format && format.formatName) {
+                        formatName = format.formatName === "QR_CODE" ? "QRコード" : "バーコード";
+                    }
+                    
+                    barcodeStatus.textContent = `${formatName}読み取り成功: ${decodedText}`;
+                    
+                    // 音声フィードバック
+                    if (systemSettings.soundNotification) {
+                        playSuccessSound();
+                    }
+                    
+                    // バイブレーション（対応デバイスのみ）
+                    if (navigator.vibrate) {
+                        navigator.vibrate(200);
+                    }
+                    
+                    // バーコード処理
+                    processMemberRegistration(decodedText);
+                    
+                    // 成功後少し待ってから次の読み取りを可能にする
+                    setTimeout(() => {
+                        barcodeStatus.textContent = "バーコードまたはQRコードをカメラに向けてください";
+                    }, 2000);
+                },
+                (errorMessage) => {
+                    // 通常のスキャン中のエラーは無視（連続的に発生するため）
+                }
+            ).then(() => {
+                barcodeStatus.textContent = "バーコードまたはQRコードをカメラに向けてください";
+            }).catch(err => {
+                console.error("バーコードスキャナー開始エラー:", err);
+                barcodeStatus.textContent = "カメラの起動に失敗しました。ブラウザでカメラの許可が必要です。";
+                startBarcodeBtn.style.display = 'block';
+                stopBarcodeBtn.style.display = 'none';
+                document.getElementById('barcodeOverlay').style.display = 'none';
+                
+                // iPhone Safariの場合の追加説明
+                if (navigator.userAgent.includes('iPhone') && navigator.userAgent.includes('Safari')) {
+                    barcodeStatus.textContent += " iPhone Safariをご利用の場合は、設定＞Safari＞カメラでアクセスを許可してください。";
+                }
+            });
+        }
+        
+        // バーコードスキャナー停止
+        function stopBarcodeScanner() {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => {
+                    barcodeStatus.textContent = "バーコードスキャンが停止されました";
+                    startBarcodeBtn.style.display = 'block';
+                    stopBarcodeBtn.style.display = 'none';
+                    document.getElementById('barcodeOverlay').style.display = 'none';
+                }).catch(err => {
+                    console.error("バーコードスキャナー停止エラー:", err);
+                });
+            }
+        }
+        
+        // 成功音を再生
+        function playSuccessSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.1);
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.2);
+            } catch (error) {
+                console.log("音声再生に失敗:", error);
+            }
+        }
+            
